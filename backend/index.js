@@ -1,24 +1,20 @@
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer } = require('apollo-server');
+const {sequelize} = require('./models')
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
 // your data.
-const typeDefs = gql`
-    type Query {
-        "A simple web app."
-        hello: String
-    }
-`;
+const typeDefs = require('./graphql/typeDefs')
 
-const resolvers = {
-    Query: {
-      hello: () => "Hello world",
-    },
-  };
+const resolvers = require('./graphql/resolvers')
 
-  const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers });
 
   // The `listen` method launches a web server.
   server.listen().then(({ url }) => {
     console.log(`🚀  Server ready at ${url}`);
+
+    sequelize.authenticate()
+    .then(() => console.log('DB connected'))
+    .catch(err => console.log(err.message))
   });
