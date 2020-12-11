@@ -1,6 +1,6 @@
 const {User} = require('../models')
 const bcrypt = require('bcrypt')
-const {UserInputError} = require('apollo-server')
+const {UserInputError, AuthenticationError} = require('apollo-server')
 
 module.exports = {
     Query: {
@@ -12,6 +12,37 @@ module.exports = {
                 console.log(error.message)                
             }
         },
+
+        login: async (_, args) => {
+            const {username, password} = args
+            let errors = {}
+
+            try {
+                if(username.trim() === '') errors.username = "Username must not be empty"
+                if(password === '') errors.password = "Password must not be empty"
+
+                const user = await User.findOne({where: {username}})
+
+                if(!user){
+                    errors.username = "user does not exist"
+                }
+
+                if(Object.keys(errors).length > 0){
+                    throw new UserInputError("user does not exist", {errors})
+                }
+
+                const correctPasword = await bcrypt.compare(password, user.password)
+                if(!correctPasword){
+                    errors.password = "password is not correct."
+                    throw new UserInputError("Password is not correct")
+                }
+
+                return user
+            } catch (error) {
+                console.log(error)
+                throw error
+            }
+        }
       },
 
       Mutation:{
@@ -26,12 +57,14 @@ module.exports = {
                   if(password.trim() === '') errors.password = 'Password must not be empty.'
                   if(confirmPassword.trim() === '') errors.confirmPassword = 'ConfirmPasswrd must not be empty.'
 
-                  //?check for data existense
-                  const userByUsername = await User.findOne({where: {username}})
-                  const userByEmail = await User.findOne({where: {email}})
+                  if(password !== confirmPassword) errors.matchPassword = 'Password does not match'
 
-                  if(userByUsername) errors.username = "Username is taken"
-                  if(userByEmail) errors.email = "Email is already registered"
+                //   //?check for data existense
+                //   const userByUsername = await User.findOne({where: {username}})
+                //   const userByEmail = await User.findOne({where: {email}})
+
+                //   if(userByUsername) errors.username = "Username is taken"
+                //   if(userByEmail) errors.email = "Email is already registered"
 
                   if(Object.keys(errors).length > 0){
                       throw errors
@@ -47,8 +80,13 @@ module.exports = {
                   return user
 
               } catch (error) {
-                  console.log(error.message)
-                  throw new UserInputError('Bad input', {errors: error})
+                  console.log(error)
+                  if(error.name === "SequelizeUniqueConstraintError"){
+                      error.errors.forEach(er => (errors[er.path] = `${er.path} must be unique`))
+                  } else if(error.name === "SequelizeValidationError"){
+                      error.errors.forEach(er => (errors[er.path] = er.message))
+                  }
+                  throw new UserInputError('Bad input', {errors})
               }
           }
       }
