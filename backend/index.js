@@ -8,7 +8,7 @@ const typeDefs = require('./graphql/typeDefs')
 
 const resolvers = require('./graphql/resolvers')
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, context: ctx => ctx });
 
   // The `listen` method launches a web server.
   server.listen().then(({ url }) => {
