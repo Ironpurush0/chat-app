@@ -1,9 +1,9 @@
 import React, {useState} from 'react'
 import {Row, Col, Form, Button} from 'react-bootstrap'
-
+import {Link} from 'react-router-dom'
 import {gql, useMutation} from '@apollo/client'
 
-const App = () => {
+const RegisterPage = (props) => {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -19,10 +19,11 @@ const App = () => {
   `
 
 const [register, {loading}] = useMutation(REGISTER_USER, {
-    update(_, res){
-        console.log(res)
+    update: (_, res) => {
+      console.log(res)
+      props.history.push("/login")
     },
-    onError(error){
+    onError: (error) => {
         console.log(error.graphQLErrors[0].extensions.errors)
         setErrors(error.graphQLErrors[0].extensions.errors)
     }
@@ -38,10 +39,6 @@ const [register, {loading}] = useMutation(REGISTER_USER, {
     setPassword("")
     setConfirmPassword("")
 
-    console.log(email)
-    console.log(username)
-    console.log(password)
-    console.log(confirmPassword)
     console.log(errors)
   }
 
@@ -85,10 +82,11 @@ const [register, {loading}] = useMutation(REGISTER_USER, {
                 Register
               </Button>
             </div>
+            <Form.Text className="text-center mt-3">Already have an account? <Link to="/login">Login</Link></Form.Text>
         </Form>
         </Col>
       </Row>
   );
 }
 
-export default App;
+export default RegisterPage;
