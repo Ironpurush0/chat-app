@@ -20,7 +20,7 @@ const [login, {loading}] = useLazyQuery(LOGIN_USER, {
     onCompleted(data){
         console.log(data)
         localStorage.setItem('token', data.login.token)
-        props.history.push("/chat")
+        props.history.push('/chat')
     },
     onError(error){
         console.log(error.graphQLErrors[0].extensions.errors)
